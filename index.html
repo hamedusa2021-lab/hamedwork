@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fa" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading Workspace - 3 Panels</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0b0f19;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #e2e8f0;
+    }
+
+    .dashboard-container {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* نوار هدر بالا */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 40px;
+      background-color: #161f30;
+      border-bottom: 1px solid #283548;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-title {
+      font-weight: 600;
+      color: #38bdf8;
+    }
+
+    .panels-toggle-bar {
+      display: flex;
+      gap: 6px;
+    }
+
+    .toggle-chip {
+      background-color: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: 0.15s;
+    }
+
+    .toggle-chip.active {
+      background-color: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+      font-weight: 500;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      background-color: #243247;
+      color: #f1f5f9;
+      border: 1px solid #3b4d66;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #33445e;
+    }
+
+    /* فضای تقسیم افقی */
+    .workspace-split {
+      display: flex;
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 40px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-width: 160px;
+      position: relative;
+      background-color: #0b0f19;
+      flex: 1 1 33.33%;
+    }
+
+    .panel-header {
+      height: 34px;
+      background-color: #161f30;
+      border-bottom: 1px solid #283548;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      font-size: 12px;
+    }
+
+    .panel-title {
+      color: #cbd5e1;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel-controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .zoom-group {
+      display: inline-flex;
+      align-items: center;
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .zoom-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 2px 6px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .zoom-btn:hover {
+      background-color: #1e293b;
+      color: #38bdf8;
+    }
+
+    .zoom-value {
+      font-size: 11px;
+      color: #e2e8f0;
+      padding: 0 4px;
+      min-width: 35px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: 1px solid #3b4d66;
+      color: #94a3b8;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      background-color: #243247;
+      color: #ffffff;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      background-color: #ef4444;
+      color: #ffffff;
+    }
+
+    .panel-body {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: calc(100% - 34px);
+      overflow: hidden;
+      background-color: #ffffff;
+    }
+
+    .panel-body iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      border: none;
+      transform-origin: 0 0;
+      background-color: #ffffff;
+      width: 100%;
+      height: 100%;
+    }
+
+    .resizer {
+      width: 6px;
+      background-color: #161f30;
+      cursor: col-resize;
+      transition: background-color 0.2s;
+      position: relative;
+      z-index: 10;
+    }
+
+    .resizer:hover, .resizer.dragging {
+      background-color: #38bdf8;
+    }
+
+    .iframe-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <!-- نوار بالا -->
+    <div class="top-bar">
+      <div class="brand-section">
+        <div class="brand-title">📊 Trading Workspace</div>
+        <!-- دکمه‌های بازگردانی و بستن سایت‌ها -->
+        <div class="panels-toggle-bar">
+          <button class="toggle-chip active" id="btn_panel1" onclick="togglePanel('panel1')">
+            ● Forex Factory
+          </button>
+          <button class="toggle-chip active" id="btn_panel2" onclick="togglePanel('panel2')">
+            ● InvestingLive Orders
+          </button>
+          <button class="toggle-chip active" id="btn_panel3" onclick="togglePanel('panel3')">
+            ● Trading Journal
+          </button>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn" onclick="resetAll()">⟲ Reset All (3 Panels)</button>
+        <button class="btn" onclick="toggleFullScreen()">⛶ Fullscreen</button>
+      </div>
+    </div>
+
+    <!-- کانتینر پنل‌ها -->
+    <div class="workspace-split">
+      
+      <!-- پنل ۱: Forex Factory -->
+      <div class="panel" id="panel1">
+        <div class="panel-header">
+          <span class="panel-title">🟢 Forex Factory</span>
+          <div class="panel-controls">
+            <div class="zoom-group">
+              <button class="zoom-btn" onclick="adjustZoom('panel1', -10)">−</button>
+              <span class="zoom-value" id="zoomVal_panel1" onclick="resetZoom('panel1')" title="Reset">100%</span>
+              <button class="zoom-btn" onclick="adjustZoom('panel1', 10)">+</button>
+            </div>
+            <button class="action-btn" onclick="refreshFrame('frame_panel1')">🔄</button>
+            <button class="action-btn" onclick="window.open('https://www.forexfactory.com/', '_blank')">↗</button>
+            <button class="close-btn" onclick="togglePanel('panel1')" title="بستن پنل">✕</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <iframe id="frame_panel1" src="https://www.forexfactory.com/" title="Forex Factory"></iframe>
+          <div class="iframe-overlay"></div>
+        </div>
+      </div>
+
+      <div class="resizer" id="resizer1"></div>
+
+      <!-- پنل ۲: InvestingLive Orders -->
+      <div class="panel" id="panel2">
+        <div class="panel-header">
+          <span class="panel-title">🟠 InvestingLive Orders</span>
+          <div class="panel-controls">
+            <div class="zoom-group">
+              <button class="zoom-btn" onclick="adjustZoom('panel2', -10)">−</button>
+              <span class="zoom-value" id="zoomVal_panel2" onclick="resetZoom('panel2')" title="Reset">100%</span>
+              <button class="zoom-btn" onclick="adjustZoom('panel2', 10)">+</button>
+            </div>
+            <button class="action-btn" onclick="refreshFrame('frame_panel2')">🔄</button>
+            <button class="action-btn" onclick="window.open('https://investinglive.com/Orders/', '_blank')">↗</button>
+            <button class="close-btn" onclick="togglePanel('panel2')" title="بستن پنل">✕</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <iframe id="frame_panel2" src="https://investinglive.com/Orders/" title="InvestingLive Orders"></iframe>
+          <div class="iframe-overlay"></div>
+        </div>
+      </div>
+
+      <div class="resizer" id="resizer2"></div>
+
+      <!-- پنل ۳: Trading Journal -->
+      <div class="panel" id="panel3">
+        <div class="panel-header">
+          <span class="panel-title">🔵 Trading Journal</span>
+          <div class="panel-controls">
+            <div class="zoom-group">
+              <button class="zoom-btn" onclick="adjustZoom('panel3', -10)">−</button>
+              <span class="zoom-value" id="zoomVal_panel3" onclick="resetZoom('panel3')" title="Reset">100%</span>
+              <button class="zoom-btn" onclick="adjustZoom('panel3', 10)">+</button>
+            </div>
+            <button class="action-btn" onclick="refreshFrame('frame_panel3')">🔄</button>
+            <button class="action-btn" onclick="window.open('https://hamedusa2021-lab.github.io/trading-journal/', '_blank')">↗</button>
+            <button class="close-btn" onclick="togglePanel('panel3')" title="بستن پنل">✕</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <iframe id="frame_panel3" src="https://hamedusa2021-lab.github.io/trading-journal/" title="Trading Journal"></iframe>
+          <div class="iframe-overlay"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // وضعیت باز یا بسته بودن هر پنل (پیش‌فرض هر سه باز هستند)
+    let isP1 = true;
+    let isP2 = true;
+    let isP3 = true;
+
+    // مقادیر زوم
+    const zoomState = {
+      panel1: 100,
+      panel2: 100,
+      panel3: 100
+    };
+
+    // به‌روزرسانی چیدمان
+    function updateLayout() {
+      const p1 = document.getElementById('panel1');
+      const p2 = document.getElementById('panel2');
+      const p3 = document.getElementById('panel3');
+      const r1 = document.getElementById('resizer1');
+      const r2 = document.getElementById('resizer2');
+
+      const btn1 = document.getElementById('btn_panel1');
+      const btn2 = document.getElementById('btn_panel2');
+      const btn3 = document.getElementById('btn_panel3');
+
+      p1.style.display = isP1 ? 'flex' : 'none';
+      p2.style.display = isP2 ? 'flex' : 'none';
+      p3.style.display = isP3 ? 'flex' : 'none';
+
+      btn1.className = isP1 ? 'toggle-chip active' : 'toggle-chip';
+      btn2.className = isP2 ? 'toggle-chip active' : 'toggle-chip';
+      btn3.className = isP3 ? 'toggle-chip active' : 'toggle-chip';
+
+      const activeCount = (isP1 ? 1 : 0) + (isP2 ? 1 : 0) + (isP3 ? 1 : 0);
+
+      if (activeCount === 3) {
+        p1.style.flex = '1 1 33.33%';
+        p2.style.flex = '1 1 33.33%';
+        p3.style.flex = '1 1 33.33%';
+        r1.style.display = 'block';
+        r2.style.display = 'block';
+      } else if (activeCount === 2) {
+        if (isP1 && isP2 && !isP3) {
+          p1.style.flex = '1 1 50%';
+          p2.style.flex = '1 1 50%';
+          r1.style.display = 'block';
+          r2.style.display = 'none';
+        } else if (isP1 && !isP2 && isP3) {
+          p1.style.flex = '1 1 50%';
+          p3.style.flex = '1 1 50%';
+          r1.style.display = 'none';
+          r2.style.display = 'block';
+        } else if (!isP1 && isP2 && isP3) {
+          p2.style.flex = '1 1 50%';
+          p3.style.flex = '1 1 50%';
+          r1.style.display = 'none';
+          r2.style.display = 'block';
+        }
+      } else if (activeCount === 1) {
+        if (isP1) p1.style.flex = '1 1 100%';
+        if (isP2) p2.style.flex = '1 1 100%';
+        if (isP3) p3.style.flex = '1 1 100%';
+        r1.style.display = 'none';
+        r2.style.display = 'none';
+      }
+    }
+
+    // تاگل کردن باز و بسته شدن پنل‌ها
+    function togglePanel(panelId) {
+      if (panelId === 'panel1') isP1 = !isP1;
+      if (panelId === 'panel2') isP2 = !isP2;
+      if (panelId === 'panel3') isP3 = !isP3;
+
+      // حداقل ۱ پنل باید باز بماند
+      if (!isP1 && !isP2 && !isP3) {
+        if (panelId === 'panel1') isP1 = true;
+        if (panelId === 'panel2') isP2 = true;
+        if (panelId === 'panel3') isP3 = true;
+      }
+      updateLayout();
+    }
+
+    // تنظیم زوم
+    function applyZoom(panelId) {
+      const zoom = zoomState[panelId];
+      const frame = document.getElementById('frame_' + panelId);
+      const label = document.getElementById('zoomVal_' + panelId);
+      if (!frame || !label) return;
+
+      label.textContent = zoom + '%';
+      const scale = zoom / 100;
+      frame.style.width = (100 / scale) + '%';
+      frame.style.height = (100 / scale) + '%';
+      frame.style.transform = `scale(${scale})`;
+    }
+
+    function adjustZoom(panelId, delta) {
+      let current = zoomState[panelId] + delta;
+      if (current < 40) current = 40;
+      if (current > 200) current = 200;
+      zoomState[panelId] = current;
+      applyZoom(panelId);
+    }
+
+    function resetZoom(panelId) {
+      zoomState[panelId] = 100;
+      applyZoom(panelId);
+    }
+
+    function refreshFrame(frameId) {
+      const frame = document.getElementById(frameId);
+      if (frame) frame.src = frame.src;
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    function resetAll() {
+      isP1 = true;
+      isP2 = true;
+      isP3 = true;
+      ['panel1', 'panel2', 'panel3'].forEach(id => {
+        zoomState[id] = 100;
+        applyZoom(id);
+      });
+      updateLayout();
+    }
+
+    // منطق درگ کردن جداکننده‌ها
+    function setupDragLogic() {
+      const r1 = document.getElementById('resizer1');
+      const r2 = document.getElementById('resizer2');
+      const overlays = document.querySelectorAll('.iframe-overlay');
+
+      function attachResizer(resizer, getPanels) {
+        let startX = 0;
+        let startWLeft = 0;
+        let startWRight = 0;
+        let leftEl = null;
+        let rightEl = null;
+
+        resizer.addEventListener('mousedown', (e) => {
+          const pair = getPanels();
+          if (!pair.left || !pair.right) return;
+          leftEl = pair.left;
+          rightEl = pair.right;
+
+          startX = e.clientX;
+          startWLeft = leftEl.getBoundingClientRect().width;
+          startWRight = rightEl.getBoundingClientRect().width;
+
+          resizer.classList.add('dragging');
+          overlays.forEach(o => o.style.display = 'block');
+
+          function onMouseMove(e) {
+            const dx = e.clientX - startX;
+            const newL = startWLeft + dx;
+            const newR = startWRight - dx;
+
+            if (newL > 140 && newR > 140) {
+              leftEl.style.flex = `0 0 ${newL}px`;
+              rightEl.style.flex = `0 0 ${newR}px`;
+            }
+          }
+
+          function onMouseUp() {
+            resizer.classList.remove('dragging');
+            overlays.forEach(o => o.style.display = 'none');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          }
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        });
+      }
+
+      attachResizer(r1, () => ({
+        left: document.getElementById('panel1'),
+        right: document.getElementById('panel2')
+      }));
+
+      attachResizer(r2, () => ({
+        left: isP2 ? document.getElementById('panel2') : document.getElementById('panel1'),
+        right: document.getElementById('panel3')
+      }));
+    }
+
+    // راه‌اندازی اولیه
+    updateLayout();
+    ['panel1', 'panel2', 'panel3'].forEach(id => applyZoom(id));
+    setupDragLogic();
+  </script>
+</body>
+</html>
